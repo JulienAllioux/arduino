@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="MyDemoApp">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>Gestion horaire</title>      
+
+    <link href='http://fonts.googleapis.com/css?family=Titillium+Web:400,300,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.1.min.js"></script>
+    <script type="text/javascript" src="https://cdn.myconstellation.io/js/Constellation-1.8.1.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+    <script type="text/javascript" src="https://cdn.myconstellation.io/js/ngConstellation-1.8.1.min.js"></script>
+
+    <script>
+        var myDemoApp = angular.module('MyDemoApp', ['ngConstellation']);
+        myDemoApp.controller('MyController', ['$scope', 'constellationConsumer', function($scope, constellation) {
+
+
+            constellation.initializeClient("http://192.168.163.1:8088", "123456789", "Ma page Web");
+
+            $scope.cpus = {};
+            $scope.constellation = constellation;
+
+            constellation.onConnectionStateChanged(function(change) {
+                if (change.newState === $.signalR.connectionState.connected) {
+                    console.log("Je suis connecté !");
+
+
+
+                    constellation.registerStateObjectLink("ESP8266", "DemoIsen", "TimeSlot", "*",
+                        function(stateObject) {
+
+                            $scope.TimeSlot = stateObject.Value;
+                            console.log("le début de la plage est : " + stateObject.Value.beginHour + "h" + stateObject.Value.beginMinute + "min");
+                            console.log("la fin de la plage est : " + stateObject.Value.endHour + "h" + stateObject.Value.endMinute + "min");
+                            $scope.$apply();
+
+
+                        });
+
+                }
+            });
+            constellation.connect();
+
+        }]);
+    </script>
+
+
+</head>
+
+<body ng-controller="MyController">
+
+<p></p>
+<p></p>
+
+
+<h1> Votre équipement sera alimenté de : {{TimeSlot.beginHour}} h  {{TimeSlot.beginMinute}} min  à {{TimeSlot.endHour}} h  {{TimeSlot.endMinute}} </h1>
+
+
+    <form>
+        <div class="form">
+            <div id="hours">
+
+
+
+ <div class="top-row">
+                    <h2> Choissisez l'intervalle de fonctionnement </h2>
+
+                <div class="field-wrap">
+                    <h2> Heure de debut  </h2>
+
+                    <input type="number" ng-model="hdebut" name="heuredebut" min="0" , max="23" required/>h
+            
+                    <input type="number" ng-model="mdebut" name="min debut" min="0" , max="59" required/>min
+                    
+                </div>
+
+
+                <div class="field-wrap">
+                    <h2> Heure de fin  </h2>
+           
+                    <input type="number" require autocomplete="off" ng-model="hfin" name="heure fin" min="0" , max="23" required/>h
+                   
+                    <input type="number" ng-model="minfin" name="minute fin" min="0" , max="59" required/>min
+                </div>
+            </div>
+            </div>
+
+   <input class="button button-block" type="button" value="Envoyer" ng-click="constellation.sendMessage({ Scope: 'Package', Args: ['DemoIsen'] }, 'DriveLED', [ hdebut, mdebut, hfin, minfin ]);">
+
+           
+        </div>
+
+
+    </form>
+
+    <script src="js/index.js"></script>
+
+
+</body>
+
+</html>
